@@ -7,10 +7,25 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+
+    - name: Install Buildozer and Kivy
+      run: |
+        pip install --upgrade pip setuptools
+        pip install "cython<3.0.0" buildozer kivy
 
     - name: Prepare Kivy Main File
       run: |
@@ -75,10 +90,9 @@ jobs:
         warn_on_root = 1
         EOF
 
-    - name: Build with Buildozer
-      uses: submod/buildozer-action@master
-      with:
-        command: buildozer -v android debug
+    - name: Build APK with Buildozer
+      run: |
+        buildozer -v android debug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
