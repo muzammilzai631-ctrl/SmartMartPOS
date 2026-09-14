@@ -1,0 +1,42 @@
+name: Build Android APK (Smart Mart POS)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+        pip install --upgrade pip setuptools buildozer cython kivy
+
+    - name: Create Buildozer Spec
+      run: |
+        buildozer init
+        sed -i 's/^title = .*/title = Smart Mart POS/' buildozer.spec
+        sed -i 's/^package.name = .*/package.name = smartmartpos/' buildozer.spec
+        sed -i 's/^package.domain = .*/package.domain = org.smartmart.pos/' buildozer.spec
+        sed -i 's/^requirements = .*/requirements = python3,kivy/' buildozer.spec
+
+    - name: Build APK with Buildozer
+      run: |
+        buildozer -v android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: SmartMartPOS-APK
+        path: bin/*.apk
