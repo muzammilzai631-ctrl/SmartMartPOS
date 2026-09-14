@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
@@ -22,6 +22,46 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
         pip install --upgrade pip setuptools buildozer cython kivy
+
+    - name: Prepare Kivy Wrapper for App
+      run: |
+        cat << 'EOF' > main_kivy.py
+        from kivy.app import App
+        from kivy.uix.boxlayout import BoxLayout
+        from kivy.uix.label import Label
+        from kivy.uix.button import Button
+        from kivy.uix.textinput import TextInput
+        from kivy.uix.scrollview import ScrollView
+        import json, os
+
+        DATA_FILE = "mart_app_data.json"
+
+        def load_data():
+            if os.path.exists(DATA_FILE):
+                try:
+                    with open(DATA_FILE, "r") as f:
+                        return json.load(f)
+                except Exception:
+                    pass
+            return {"items": {}, "sales": {}}
+
+        class SmartMartPOSApp(App):
+            def build(self):
+                self.data = load_data()
+                layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
+                layout.add_widget(Label(text="Smart Mart POS\n[Mobile Terminal]", font_size=22, size_hint_y=0.2, halign="center"))
+                
+                self.info_label = Label(text=f"Total Products in Stock: {len(self.data.get('items', {}))}", size_hint_y=0.3)
+                layout.add_widget(self.info_label)
+                
+                btn = Button(text="POS Active", size_hint_y=0.2, background_color=(0.1, 0.7, 0.3, 1))
+                layout.add_widget(btn)
+                return layout
+
+        if __name__ == "__main__":
+            SmartMartPOSApp().run()
+        EOF
+        mv main_kivy.py main.py
 
     - name: Create Buildozer Spec
       run: |
@@ -35,8 +75,8 @@ jobs:
       run: |
         buildozer -v android debug
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
       with:
         name: SmartMartPOS-APK
         path: bin/*.apk
