@@ -50,14 +50,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade buildozer cython kivy
 
-      - name: Ensure buildozer.spec exists and auto-accept license
-        run: |
-          if [ ! -f buildozer.spec ]; then
-            buildozer init
-          fi
-          sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
-          sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
-
       - name: Build APK with Buildozer
         run: |
           buildozer android debug
