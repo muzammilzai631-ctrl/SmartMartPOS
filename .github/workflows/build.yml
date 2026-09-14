@@ -15,6 +15,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Free Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android/sdk/ndk
+          sudo rm -rf /opt/ghc
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -50,18 +56,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install "cython<3.0.0" buildozer kivy
 
-      - name: Clean Previous Builds and Fix NDK Envs
-        run: |
-          unset ANDROID_NDK
-          unset ANDROID_NDK_HOME
-          unset ANDROID_NDK_ROOT
-          buildozer distclean || true
-
       - name: Build APK with Buildozer
+        env:
+          ANDROID_NDK_HOME: ""
+          ANDROID_NDK_ROOT: ""
+          ANDROID_NDK: ""
         run: |
-          unset ANDROID_NDK
-          unset ANDROID_NDK_HOME
-          unset ANDROID_NDK_ROOT
           buildozer android debug
 
       - name: Upload APK Artifact
