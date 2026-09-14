@@ -12,26 +12,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-        pip install --upgrade pip setuptools buildozer cython kivy
-
-    - name: Prepare Kivy Wrapper for App
+    - name: Prepare Kivy Main File
       run: |
         cat << 'EOF' > main_kivy.py
         from kivy.app import App
         from kivy.uix.boxlayout import BoxLayout
         from kivy.uix.label import Label
         from kivy.uix.button import Button
-        from kivy.uix.textinput import TextInput
-        from kivy.uix.scrollview import ScrollView
         import json, os
 
         DATA_FILE = "mart_app_data.json"
@@ -63,17 +50,38 @@ jobs:
         EOF
         mv main_kivy.py main.py
 
-    - name: Create Buildozer Spec
+    - name: Create Buildozer Spec File
       run: |
-        buildozer init
-        sed -i 's/^title = .*/title = Smart Mart POS/' buildozer.spec
-        sed -i 's/^package.name = .*/package.name = smartmartpos/' buildozer.spec
-        sed -i 's/^package.domain = .*/package.domain = org.smartmart.pos/' buildozer.spec
-        sed -i 's/^requirements = .*/requirements = python3,kivy/' buildozer.spec
+        cat << 'EOF' > buildozer.spec
+        [app]
+        title = Smart Mart POS
+        package.name = smartmartpos
+        package.domain = org.smartmart.pos
+        source.dir = .
+        source.include_exts = py,png,jpg,kv,atlas
+        version = 0.1
+        requirements = python3,kivy
+        orientation = portrait
+        osx.python_version = 3
+        osx.kivy_version = 1.9.1
+        fullscreen = 0
+        android.permissions = INTERNET
+        android.api = 33
+        android.minapi = 21
+        android.ndk = 25b
+        android.accept_sdk_license = True
+        android.archs = arm64-v8a
 
-    - name: Build APK with Buildozer
-      run: |
-        buildozer -v android debug
+        [buildozer]
+        log_level = 2
+        warn_on_root = 1
+        EOF
+
+    - name: Build with Buildozer Action
+      uses: ArtemShedov/buildozer-action@v1.2
+      with:
+        command: buildozer -v android debug
+        submodule: false
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
