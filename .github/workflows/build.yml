@@ -50,13 +50,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade buildozer cython kivy
 
-      - name: Accept Android SDK Licenses
+      - name: Ensure buildozer.spec exists and auto-accept license
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          if [ ! -f buildozer.spec ]; then
+            buildozer init
+          fi
+          sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+          sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
 
       - name: Build APK with Buildozer
         run: |
-          yes | buildozer android debug
+          buildozer android debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
