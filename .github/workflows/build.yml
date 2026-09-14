@@ -62,8 +62,6 @@ jobs:
         version = 0.1
         requirements = python3,kivy
         orientation = portrait
-        osx.python_version = 3
-        osx.kivy_version = 1.9.1
         fullscreen = 0
         android.permissions = INTERNET
         android.api = 33
@@ -77,11 +75,10 @@ jobs:
         warn_on_root = 1
         EOF
 
-    - name: Build with Buildozer Action
-      uses: ArtemShedov/buildozer-action@v1.2
+    - name: Build with Buildozer
+      uses: submod/buildozer-action@master
       with:
         command: buildozer -v android debug
-        submodule: false
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
